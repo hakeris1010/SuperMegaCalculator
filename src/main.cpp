@@ -5,7 +5,7 @@
 #include <tools/debug.h>
 #include <tools/fun.h>
 
-#define VERSION "v0.1 final"
+#define VERSION "v0.2"
 
 Debug deb;
 
