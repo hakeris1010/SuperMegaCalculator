@@ -1,3 +1,8 @@
+/*
+BUGS!!!:
+- None by now
+
+*/
 #include "calcstart.h"
 #include "tools/fun.h"
 #include <string>
@@ -5,7 +10,7 @@
 #include <tools/debug.h>
 #include <tools/fun.h>
 
-#define VERSION "v0.2"
+#define VERSION "v0.3"
 
 Debug deb;
 
@@ -14,7 +19,7 @@ using namespace std;
 
 int main()
 {
-    deb.setMode(DEBUG_NO_DEBUG);
+    deb.setMode(DEBUG_TO_SCREEN);
     deb.setDoublePrecision(15);
     deb.closeFile(false);
 

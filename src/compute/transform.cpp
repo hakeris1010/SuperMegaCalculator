@@ -18,7 +18,7 @@ int Transformer::setCalculationElements(std::string str, std::vector<CalcElement
     str.push_back(char(32));
 
     int numCount=0, opCount=0, par1Count=0, par2Count=0, chunkCount=0, i=0;
-    bool areAdvancedOps=false, onChar=false;
+    bool areAdvancedOps=false, onChar=false, operatorLast=false;
     std::string temp;
 
     if(str.size()==0) return 1; //empty!!!
@@ -28,6 +28,7 @@ int Transformer::setCalculationElements(std::string str, std::vector<CalcElement
     {
         if(dbg) deb<<"\n* * * *\nLoop of i="<<i<<"\n";
         //if(dbg) deb<<"States: onChar: "<<onChar<<", numCount="<<numCount<<", opCount="<<opCount<<",\ntemp(opStr)= "<<temp<<"\n~~~\n";
+
         if(onChar)
         {
             if(dbg) deb<<"onChar: Trying to set op from temp= "<<temp<<"\n";
@@ -67,7 +68,13 @@ int Transformer::setCalculationElements(std::string str, std::vector<CalcElement
                 }
 
                 elems.push_back(el);
-                opCount++;
+
+                if(el.type != NUMBER)
+                {
+                    opCount++;
+                    operatorLast=true;
+                }
+                else operatorLast=false;
 
                 if(opnum==PAR1) par1Count++;
                 if(opnum==PAR2) par2Count++;
@@ -94,6 +101,7 @@ int Transformer::setCalculationElements(std::string str, std::vector<CalcElement
 
                 elems.push_back(el);
                 numCount++;
+                operatorLast=false;
             }
             else //not number
             {
@@ -177,7 +185,8 @@ int Transformer::setOperator(std::string str, int pos)
     //COMPLEX ONES
     else if(Fun::findText(str, "pow", pos) || Fun::findText(str, "POW", pos)) return LAIP;
 
-    else if(Fun::findText(str, "sqrt", pos) || Fun::findText(str, "SQRT", pos)) return SAK;
+    else if(Fun::findText(str, "sqrt", pos) || Fun::findText(str, "SQRT", pos)
+            || Fun::findText(str, "rt", pos) || Fun::findText(str, "RT", pos)) return SAK;
 
     else if(Fun::findText(str, "sin", pos) || Fun::findText(str, "SIN", pos)) return SIN;
 

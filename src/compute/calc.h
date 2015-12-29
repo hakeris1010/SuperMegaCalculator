@@ -23,6 +23,7 @@ private:
     void correctString(std::string & str);
     void calculateDaugs(std::vector<CalcElement> &elems);
     void calculateSpecials(std::vector<CalcElement> &elems);
+    void identifyNegatives(std::vector<CalcElement> &elems);
 
     double recursiveChunkyCalculation(std::vector<CalcElement> elemso, int level=0);
     double makeCalculationFromChunk(std::vector<CalcElement> chunk);

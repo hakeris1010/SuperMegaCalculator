@@ -74,12 +74,7 @@ int Calculator::startCalculation()
 
 void Calculator::correctString(std::string & str)
 {
-    if(str[0]=='(')
-    {
-        str.insert(0,"0+",2);
-    }
-
-    //addParenthesesToDaug(str);
+    //something in the future.
 }
 
 bool Calculator::operatorNext(std::string str, int pos)
@@ -235,10 +230,11 @@ double Calculator::makeCalculationFromChunk(std::vector<CalcElement> chunk)
 {
     double calcuResult=(double)chunk.size();
 
-    calculateSpecials(chunk);
-    calculateDaugs(chunk);
+    identifyNegatives(chunk);
+    calculateSpecials(chunk); //Exponents
+    calculateDaugs(chunk); //Multiplication, Division
 
-    calcuResult = calculateSudDaug(chunk,1);
+    calcuResult = calculateSudDaug(chunk,1); //Addition, Subtraction
 
     return calcuResult;
 }
@@ -283,6 +279,61 @@ double Calculator::calculateSudDaug(std::vector<CalcElement> elem, int mode) //w
     }
 
     return rezl;
+}
+
+void Calculator::identifyNegatives(std::vector<CalcElement> &elems)
+{
+    bool dbg = DEBUG_CALCULATOR_IDENTIFYNEGATIVES;
+    if(dbg) deb<<"\n- - - - -\nCalc::identifyNegatives():\nGot vector:\n";
+    Transformer::showElements(elems,1);
+
+    CalcElement temp;
+    bool needToDoStuff=false;
+
+    for(int i=0; i<elems.size(); i++)
+    {
+        if((elems[i].type==OPERATOR && elems[i].oper.operation == MIN))
+        {
+            if(i==0) needToDoStuff=true;
+            else if(elems[i-1].type != NUMBER && elems[i-1].oper.operation != PAR2) needToDoStuff=true;
+        }
+
+        if(needToDoStuff)
+        {
+            temp.clear();
+            temp.type=OPERATOR;
+            temp.oper.operation=PAR1;
+
+            elems.insert(elems.begin()+i, temp);
+            i++;
+
+            temp.clear();
+            temp.type=NUMBER;
+            temp.number=0;
+
+            elems.insert(elems.begin()+i, temp);
+            i++;
+
+            temp.clear();
+            temp.type=OPERATOR;
+            temp.oper.operation=PAR2;
+
+            int j=0;
+            for(j=0; j<elems.size()-i; j++)
+            {
+                if(elems[i+j].type==NUMBER)
+                {
+                    elems.insert(elems.begin()+i+j+1, temp);
+                    break;
+                }
+            }
+
+            needToDoStuff=false;
+        }
+    }
+
+    deb<<"Elems after negative id-cation:\n";
+    Transformer::showElements(elems,1);
 }
 
 void Calculator::calculateDaugs(std::vector<CalcElement> &elems) //Bug!
@@ -494,7 +545,11 @@ double Calculator::skaicSpecial(CalcElement numop)
     //multiparams:
     case LOG: ress= log( Transformer::getValueFromElement(numop)) / log(Transformer::getValueFromElement(numop,0) ); break;
     case LAIP: ress= pow( Transformer::getValueFromElement(numop), Transformer::getValueFromElement(numop,0) ); break;
-    case SAK: ress= pow( Transformer::getValueFromElement(numop), 1 / Transformer::getValueFromElement(numop,0) ); break;
+    case SAK:
+        {
+            if(numop.oper.paramCount==0){ ress= pow( Transformer::getValueFromElement(numop), 0.5 ); break; }
+            else{ ress= pow( Transformer::getValueFromElement(numop), 1 / Transformer::getValueFromElement(numop,0) ); break; }
+        }
     }
 
     if(dbg) deb<<"Res= "<<ress<<"\n+-+-+-+\n";
