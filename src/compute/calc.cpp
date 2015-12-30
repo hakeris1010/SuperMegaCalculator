@@ -127,13 +127,16 @@ double Calculator::recursiveChunkyCalculation(std::vector<CalcElement> elemso, i
 
                     if(dbg) deb<<"innerChunkStartPos="<<innerChunkStartPos<<" \n";
                 }
+
                 //assign op to a current vec.
                 if(!nowWritingIntoChunk)
                 {
                     if(dbg) deb<<"Assigning op to currentChunk... \n";
                     currentChunk.push_back(elemso[i]);
 
-                    if(elemso[i].oper.operation >= MULTIPARAM_START) afterMultiparam=true;
+                    if(afterMultiparam &&  elemso[i].oper.operation != SEPAR) afterMultiparam=false;
+
+                    if(elemso[i].oper.operation >= MULTIPARAM_START && elemso[i+1].oper.operation != SEPAR) afterMultiparam=true;
                 }
             }
             else //writing into insider chunk.
@@ -223,6 +226,7 @@ double Calculator::recursiveChunkyCalculation(std::vector<CalcElement> elemso, i
     if(dbg) deb<<"\n*****\nLoop end. Final equation:\n";
     Transformer::showElements(elemso, 1);
     if(dbg) deb<<"Returning value from makeCalculationFromChunk()...\n------------------- \n";
+
     return makeCalculationFromChunk(elemso);
 }
 
