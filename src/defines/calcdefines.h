@@ -22,6 +22,9 @@
 #define LG 17
 #define LN 18
 
+//other specials
+#define POWS 25
+
 //multiparam
 #define LOG 30
 #define LAIP 31
@@ -49,6 +52,9 @@
 
 #define STANDART_OPERATOR_START 1
 #define STANDART_OPERATOR_END 50
+
+#define OTHERSPECIAL_START 25
+#define OTHERSPECIAL_END 30
 
 #define MULTIPARAM_START 30
 #define MULTIPARAM_END 40

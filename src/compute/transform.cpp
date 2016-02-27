@@ -103,7 +103,7 @@ int Transformer::setCalculationElements(std::string str, std::vector<CalcElement
                 numCount++;
                 operatorLast=false;
             }
-            else //not number
+            else if(assignableChar(str[i])) //not number, but assignable
             {
                 if(dbg) deb<<"Found char. assigning to temp.\n";
                 onChar=true;
@@ -170,6 +170,11 @@ void Transformer::showCalcElementContents(CalcElement elem)
     }
 }
 
+bool Transformer::assignableChar(char ch)
+{
+    if(ch==char(32)) return false;
+    return true;
+}
 
 int Transformer::setOperator(std::string str, int pos)
 {
@@ -181,6 +186,7 @@ int Transformer::setOperator(std::string str, int pos)
     else if(str[pos] == '(' ) return PAR1;
     else if(str[pos] == ')' ) return PAR2;
     else if(str[pos] == '_' ) return SEPAR;
+    else if(str[pos] == '^' ) return POWS;
 
     //COMPLEX ONES
     else if(Fun::findText(str, "pow", pos) || Fun::findText(str, "POW", pos)) return LAIP;
@@ -240,6 +246,7 @@ std::string Transformer::codeToOperator(int opcode)
     else if(opcode == LG) return "lg";
     else if(opcode == LN) return "ln";
     else if(opcode == LOG) return "log";
+    else if(opcode == POWS) return "^";
     else if(opcode == CON_PI) return "const: pi";
     else if(opcode == CON_E) return "const: e";
     else if(opcode == NONE) return "NONE";

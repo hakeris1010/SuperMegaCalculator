@@ -19,6 +19,7 @@ public:
     static double getValueFromConstant(int concode);
     static int codeCategory(int code);
     static void showCalcElementContents(CalcElement elem);
+    static bool assignableChar(char ch);
 };
 
 #endif // TRANSFORM_H_INCLUDED

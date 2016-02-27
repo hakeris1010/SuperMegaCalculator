@@ -1,12 +1,17 @@
 /*
+SuperMegaCalculator by h3nt4iBoY a.k.a. Hakeris1010
+
+v0.4
+- Added ^ operation
+- added specialEnd for better calculation
+
 BUGS:
-- None by now!!!!!!!!!!!
 
 TODOS:
 - UI, afkors!
 - Some Jokes.
-
 */
+
 #include "calcstart.h"
 #include "tools/fun.h"
 #include <string>
@@ -14,7 +19,7 @@ TODOS:
 #include <tools/debug.h>
 #include <tools/fun.h>
 
-#define VERSION "v0.3.1"
+#define VERSION "v0.4"
 
 Debug deb;
 
@@ -23,13 +28,13 @@ using namespace std;
 
 int main()
 {
-    deb.setMode(DEBUG_TO_FILE);
+    deb.setMode(DEBUG_TO_SCREEN);
     deb.setDoublePrecision(15);
     deb.closeFile(false);
 
     deb<<"\n\n==========================\n\n";
     deb<<"==========================\n\n";
-    deb<<"["<<Fun::getTimeString()<<"]>>\nSkaiciafke "<<VERSION<<" by H3nt4iB0y (C) 2015\n\n";
+    deb<<"["<<Fun::getTimeString()<<"]>>\nSkaiciafke "<<VERSION<<"\nCreated by H3nt4iB0y (C) 2015\n\n";
     deb<<"\n------------||------------\n\n";
 
     int val=startCalculazione();

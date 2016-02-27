@@ -21,7 +21,7 @@ int startCalculazione()
     //sal="1";
 
     cout<<"\nIvesk salyga:\n";
-    cin>>sal;
+    getline(cin, sal);
 
     cout<<"\nSalyga: "<<sal<<"\n\n------------------------------\n\n";
 

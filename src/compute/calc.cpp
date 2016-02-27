@@ -426,15 +426,15 @@ void Calculator::calculateSpecials(std::vector<CalcElement> &elems)
     if(dbg) deb<<"\n++++++++++++++++\nCalc::calculateSpecials() \nGot vector:";
     Transformer::showElements(elems, 1);
 
-    int specialStartPos=0, multiParamCount=0, specialLenght=0;
-    bool onMultiSpecial=false, onSpecial=false, specialReady=false;
+    int specialStartPos=0, specialEndPos=0, multiParamCount=0, specialLenght=0;
+    bool onMultiSpecial=false, onSpecial=false, specialReady=false, onOtherSpecial=false;
 
     CalcElement specel;
 
     for(int i=0; i<elems.size(); i++)
     {
         if(dbg) deb<<"* * * *\nLoop of i= "<<i<<".\nStates: ";
-        if(dbg) deb<<"onMultiSpecial: "<<onMultiSpecial<<", onSpecial: "<<onSpecial<<", specialReady: "<<specialReady<<"\n";
+        if(dbg) deb<<"onMultiSpecial: "<<onMultiSpecial<<", onOtherSpecial: "<<onOtherSpecial<<", onSpecial: "<<onSpecial<<", specialReady: "<<specialReady<<"\n";
         if(dbg) deb<<"specialStartPos= "<<specialStartPos<<", multiParamCount= "<<multiParamCount<<", specialLenght= "<<specialLenght<<"\n~ ~ ~\n";
 
         if(elems[i].type==OPERATOR){ if(dbg) deb<<"Found: Operator, val= "<<Transformer::codeToOperator(elems[i].oper.operation)<<"\n"; }
@@ -444,13 +444,20 @@ void Calculator::calculateSpecials(std::vector<CalcElement> &elems)
         if(elems[i].type==OPERATOR && elems[i].oper.operation>=ADVANCED_START && elems[i].oper.operation<NON_CALCULATIVE_START && !onSpecial)
         {
             if(dbg) deb<<"Fount advanced calc. operator: "<<Transformer::codeToOperator(elems[i].oper.operation)<<"\n";
-            if(elems[i].oper.operation>=MULTIPARAM_START)
+            if(elems[i].oper.operation>=MULTIPARAM_START && elems[i].oper.operation<MULTIPARAM_END)
             {
                 if(dbg) deb<<"Operator multiSpecial: true\n";
                 onMultiSpecial=true;
             }
+            if(elems[i].oper.operation>=OTHERSPECIAL_START && elems[i].oper.operation<OTHERSPECIAL_END)
+            {
+                if(dbg) deb<<"Operator OtherSpecial: true\n";
+                onOtherSpecial=true;
+            }
+
             onSpecial=true;
             specialStartPos=i;
+            specialEndPos=0;
             specialLenght=0;
             multiParamCount=0;
 
@@ -483,14 +490,46 @@ void Calculator::calculateSpecials(std::vector<CalcElement> &elems)
             }
             else if(!onMultiSpecial && (elems[i].type==NUMBER || elems[i].type==CONSTANT)) endOfSpecial=true;
 
+            if(onOtherSpecial)
+            {
+                if(elems[i].type==OPERATOR && elems[i].oper.operation==POWS && specel.oper.paramCount==0 && multiParamCount==0)
+                {
+                    if(i>0){
+                        if(elems[i-1].type==NUMBER) specel.oper.param[multiParamCount].val = elems[i-1].number;
+                        else specel.oper.param[multiParamCount].val = 1;
+                    }
+                    else specel.oper.param[multiParamCount].val = 1;
+                    multiParamCount++;
+
+                    if(i+1 < elems.size())
+                    {
+                        if(elems[i+1].type==NUMBER) specel.oper.param[multiParamCount].val = elems[i+1].number;
+                        else specel.oper.param[multiParamCount].val = 1;
+                    }
+                    else specel.oper.param[multiParamCount].val = 1;
+                    multiParamCount++;
+                    specel.oper.paramCount=multiParamCount;
+
+                    specialLenght=1;
+                    if(i>0) specialStartPos=i-1;
+                    specialEndPos=i+2;
+
+                    endOfSpecial=true;
+                }
+            }
+            //else if(!onOtherSpecial && (elems[i].type==NUMBER || elems[i].type==CONSTANT)) endOfSpecial=true;
+
             if(endOfSpecial)
             {
                 if(dbg) deb<<"End of special reached. Defaulting vars, assigning number and type to struct...\n";
                 if(onMultiSpecial) onMultiSpecial=false;
+                if(onOtherSpecial) onOtherSpecial=false;
                 specel.type = elems[i].type;
                 specel.number = elems[i].number;
                 onSpecial=false;
                 specialReady=true;
+
+                if(specialEndPos<i) specialEndPos=i+1;
             }
 
             specialLenght++;
@@ -510,7 +549,7 @@ void Calculator::calculateSpecials(std::vector<CalcElement> &elems)
 
             if(dbg) deb<<"Erasing used elems in vector, inserting new value...\n";
 
-            elems.erase(elems.begin()+specialStartPos, elems.begin()+i+1);
+            elems.erase(elems.begin()+specialStartPos, elems.begin()+specialEndPos);
             elems.insert(elems.begin()+specialStartPos, tmp);
 
             if(dbg) deb<<"Vector after modding:\n";
@@ -551,9 +590,12 @@ double Calculator::skaicSpecial(CalcElement numop)
     case LAIP: ress= pow( Transformer::getValueFromElement(numop), Transformer::getValueFromElement(numop,0) ); break;
     case SAK:
         {
-            if(numop.oper.paramCount==0){ ress= pow( Transformer::getValueFromElement(numop), 0.5 ); break; }
-            else{ ress= pow( Transformer::getValueFromElement(numop), 1 / Transformer::getValueFromElement(numop,0) ); break; }
+            if(numop.oper.paramCount==0){ ress= pow( Transformer::getValueFromElement(numop), 0.5 );}
+            else{ ress= pow( Transformer::getValueFromElement(numop), 1 / Transformer::getValueFromElement(numop,0) );}
+            break;
         }
+    //case POWS: ress= pow( Transformer::getValueFromElement(numop,0), Transformer::getValueFromElement(numop,1) ); break;
+    case POWS: ress= pow( numop.oper.param[0].val, numop.oper.param[1].val ); break;
     }
 
     if(dbg) deb<<"Res= "<<ress<<"\n+-+-+-+\n";
