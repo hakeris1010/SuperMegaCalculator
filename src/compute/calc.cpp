@@ -433,6 +433,7 @@ void Calculator::calculateSpecials(std::vector<CalcElement> &elems)
 
     for(int i=0; i<elems.size(); i++)
     {
+        if(i<0) i=0;
         if(dbg) deb<<"* * * *\nLoop of i= "<<i<<".\nStates: ";
         if(dbg) deb<<"onMultiSpecial: "<<onMultiSpecial<<", onOtherSpecial: "<<onOtherSpecial<<", onSpecial: "<<onSpecial<<", specialReady: "<<specialReady<<"\n";
         if(dbg) deb<<"specialStartPos= "<<specialStartPos<<", multiParamCount= "<<multiParamCount<<", specialLenght= "<<specialLenght<<"\n~ ~ ~\n";
@@ -492,10 +493,16 @@ void Calculator::calculateSpecials(std::vector<CalcElement> &elems)
 
             if(onOtherSpecial)
             {
+                if(dbg) deb<<"onOtherSpecial: \n";
                 if(elems[i].type==OPERATOR && elems[i].oper.operation==POWS && specel.oper.paramCount==0 && multiParamCount==0)
                 {
+                    if(dbg) deb<<"\nPOW CheckBlock:\n";
                     if(i>0){
-                        if(elems[i-1].type==NUMBER) specel.oper.param[multiParamCount].val = elems[i-1].number;
+                        if(elems[i-1].type==NUMBER)
+                        {
+                            specel.oper.param[multiParamCount].val = elems[i-1].number;
+                            if(dbg) deb<<"Assigning specel["<<multiParamCount<<"].value from The Number Before! ( "<<elems[i-1].number<<" )\n";
+                        }
                         else specel.oper.param[multiParamCount].val = 1;
                     }
                     else specel.oper.param[multiParamCount].val = 1;
@@ -503,7 +510,11 @@ void Calculator::calculateSpecials(std::vector<CalcElement> &elems)
 
                     if(i+1 < elems.size())
                     {
-                        if(elems[i+1].type==NUMBER) specel.oper.param[multiParamCount].val = elems[i+1].number;
+                        if(elems[i+1].type==NUMBER)
+                        {
+                            specel.oper.param[multiParamCount].val = elems[i+1].number;
+                            if(dbg) deb<<"Assigning NextNum (param.2)! val = "<< elems[i+1].number <<"\n";
+                        }
                         else specel.oper.param[multiParamCount].val = 1;
                     }
                     else specel.oper.param[multiParamCount].val = 1;
@@ -521,7 +532,7 @@ void Calculator::calculateSpecials(std::vector<CalcElement> &elems)
 
             if(endOfSpecial)
             {
-                if(dbg) deb<<"End of special reached. Defaulting vars, assigning number and type to struct...\n";
+                if(dbg) deb<<"\nEnd of special reached. Defaulting vars, assigning number and type to struct...\n";
                 if(onMultiSpecial) onMultiSpecial=false;
                 if(onOtherSpecial) onOtherSpecial=false;
                 specel.type = elems[i].type;
@@ -555,7 +566,8 @@ void Calculator::calculateSpecials(std::vector<CalcElement> &elems)
             if(dbg) deb<<"Vector after modding:\n";
             Transformer::showElements(elems, 1);
 
-            i=i-specialLenght;
+            deb<<"i = i("<<i<<") - specialLenght("<<specialLenght<<") + 2\n";
+            i = i - specialLenght + 2; //important, +1 because specialLenght comes up 1 higher, and another +1 because we'll check next element
 
             specialReady=false;
         }

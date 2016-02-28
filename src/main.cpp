@@ -1,9 +1,10 @@
 /*
 SuperMegaCalculator by h3nt4iBoY a.k.a. Hakeris1010
 
-v0.4
-- Added ^ operation
-- added specialEnd for better calculation
+v0.4.1
+- (1) Removed Bug of CalcElement not clearing its  CalcOperator's paramCount.
+- (2) Also removed bug with not being able to set up OtherSpecial, which was Related to bug (1):
+      if condition becomes false, because of the paramCount not being 0.
 
 BUGS:
 
@@ -19,7 +20,7 @@ TODOS:
 #include <tools/debug.h>
 #include <tools/fun.h>
 
-#define VERSION "v0.4"
+#define VERSION "v0.4.1"
 
 Debug deb;
 

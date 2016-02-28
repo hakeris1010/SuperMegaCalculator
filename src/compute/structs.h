@@ -32,6 +32,7 @@ struct CalcElement
             oper.param[i].isConst=false;
             oper.param[i].val=0;
         }
+        oper.paramCount=0; //this was a big bug!
     }
 };
 
