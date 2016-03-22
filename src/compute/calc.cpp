@@ -3,27 +3,57 @@
 #include "compute/calc.h"
 #include "compute/transform.h"
 #include "defines/globaldefines.h"
+#include "defines/calcdefines.h"
+#include "tools/fun.h"
 #include "tools/debug.h"
+#include "defines/formal.h" //there debug start info and debugger itself local declared.
 
-Calculator::Calculator(){ }
+
+Calculator::Calculator()
+{
+    if(deb.getLastModif().size()==0)
+    {
+        deb.setLastModifTag("Calculator::()");
+
+        startDebugger_printDebugInfo(deb.getLastModif().c_str());
+    }
+}
 
 Calculator::Calculator(int mode)
 {
+    Calculator();
+
     if(mode==1) advancedMath = true;
 }
 
 Calculator::~Calculator()
 {
+    this->clear(1); //just to use a destructor
+}
+
+void Calculator::clear(int mode)
+{
     salyga.clear();
+    result=0;
+    calcErrCode=0;
+
+    if(mode==1)
+    {
+        lastNum=0;
+        advancedMath=false;
+        isCalculated=true;
+    }
 }
 
 void Calculator::sendString(std::string str)
 {
+    bool dbg=DEBUG_CALCULATOR_SENDSTRING;
+
     isCalculated=false;
-    deb<<"\nNew operation assigned: "<<str<<"\n";
+    if(dbg) deb<<"\nNew operation assigned: "<<str<<"\n";
 
     correctString(str);
-    deb<<"\nAfter correction: "<<str<<"\n";
+    if(dbg) deb<<"\nAfter correction: "<<str<<"\n";
 
     salyga=str;
     int ero = startCalculation();
@@ -68,6 +98,7 @@ int Calculator::startCalculation()
     }
 
     result = recursiveChunkyCalculation(elemen, 1);
+    lastNum = result;
 
     return 0;
 }
@@ -336,8 +367,8 @@ void Calculator::identifyNegatives(std::vector<CalcElement> &elems)
         }
     }
 
-    deb<<"Elems after negative id-cation:\n";
-    Transformer::showElements(elems,1);
+    if(dbg) deb<<"Elems after negative id-cation:\n";
+    if(dbg) Transformer::showElements(elems,1);
 }
 
 void Calculator::calculateDaugs(std::vector<CalcElement> &elems) //Bug!
@@ -566,7 +597,7 @@ void Calculator::calculateSpecials(std::vector<CalcElement> &elems)
             if(dbg) deb<<"Vector after modding:\n";
             Transformer::showElements(elems, 1);
 
-            deb<<"i = i("<<i<<") - specialLenght("<<specialLenght<<") + 2\n";
+            if(dbg) deb<<"i = i("<<i<<") - specialLenght("<<specialLenght<<") + 2\n";
             i = i - specialLenght + 2; //important, +1 because specialLenght comes up 1 higher, and another +1 because we'll check next element
 
             specialReady=false;

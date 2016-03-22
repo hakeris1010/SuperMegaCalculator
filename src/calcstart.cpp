@@ -9,38 +9,49 @@
 #include <vector>
 #include <windows.h>
 
-using namespace std;
-
 
 int startCalculazione()
 {
     deb<<"startCalculazione():\n";
 
-    string sal;
+    Calculator myCalc;
+
+    std::string sal;
     //sal = "1+sqrt_2(2+4+3)*ln(10+sqrt_3(27+sin(pi/2)*2)+55)+1456*pow_pi(e)";
     //sal="1";
 
-    cout<<"\nIvesk salyga:\n";
-    getline(cin, sal);
+    while(1)
+    {
+        std::cout<<"\nEnter expression: (exit to close)\n";
+        getline(std::cin, sal);
 
-    cout<<"\nSalyga: "<<sal<<"\n\n------------------------------\n\n";
+        if(sal=="exit") //end loop
+            break;
 
-    deb<<"Salyga: "<<sal<<"\n";
-    int timenow=GetTickCount();
+        std::cout<<"\nSalyga: "<<sal<<"\n";
 
-    Calculator myCalc;
-    myCalc.sendString(sal);
+        if(sal=="Nyaa :3") //just some otaku stuff.
+            std::cout<<"\n   Kawaii desu~ (^_^)\n";
 
-    double rezult = myCalc.getResultAsDouble();
-    string resultstr= myCalc.getResultAsString();
+        std::cout<<"\n------------------------------\n\n";
 
-    deb<<"\nRemind of salyga: "<<sal<<"\n\n";
-    deb<<"------------------------------\n\n";
-    deb<<"Result (asDouble): "<<rezult<<" ,Result (asString): "<<resultstr<<",  time of calculation: "<<GetTickCount()-timenow<<" ms.\n";
+        deb<<"Expression: "<<sal<<"\n";
+        int timenow=GetTickCount();
 
-    cout.precision(FINAL_PRECISION);
+        myCalc.clear();
+        myCalc.sendString(sal);
 
-    cout<<"Rezultatas: "<<resultstr<<" ,  skaic. laikas: "<<GetTickCount()-timenow<<" ms.\n";
+        double rezult = myCalc.getResultAsDouble();
+        std::string resultstr= myCalc.getResultAsString();
+
+        deb<<"\nRemind of salyga: "<<sal<<"\n\n";
+        deb<<"------------------------------\n\n";
+        deb<<"Result (asDouble): "<<rezult<<" ,Result (asString): "<<resultstr<<",  time of calculation: "<<GetTickCount()-timenow<<" ms.\n";
+
+        std::cout.precision(FINAL_PRECISION);
+
+        std::cout<<"\nResult: "<<resultstr<<" ,  calc. time: "<<GetTickCount()-timenow<<" ms.\n\n";
+    }
 
     return 0;
 }

@@ -24,6 +24,8 @@ private:
     int mode = DEBUG_TO_FILE;
     bool file_close=true;
     std::ofstream outp;
+    std::string lastModificationTag;
+
 public:
     Debug(){ }
     Debug(int _mode, std::string deb_file="debug.txt")
@@ -37,6 +39,9 @@ public:
     void setMode(int _modde){ mode=_modde; }
     void closeFile(bool val){ file_close=val; }
     void setDoublePrecision(int val){ std::cout.precision(val); outp.precision(val); }
+
+    void setLastModifTag(std::string tag){ lastModificationTag=tag; }
+    std::string getLastModif(){ return lastModificationTag; }
 
     template<typename T> Debug& operator<<(const T val);
 };

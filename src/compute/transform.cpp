@@ -140,17 +140,17 @@ void Transformer::showElements(std::vector<CalcElement> eloo, int mode)
         if(eloo[i].type == NUMBER)
         {
             if(mode==0) deb<<"number, val="<<eloo[i].number<<"\n";
-            sts<<eloo[i].number;
+            sts<<eloo[i].number<<" ";
         }
         else if(eloo[i].type == OPERATOR)
         {
             if(mode==0) deb<<"operator, code="<<eloo[i].oper.operation<<", op= "<<codeToOperator(eloo[i].oper.operation)<<"\n";
-            sts<<codeToOperator(eloo[i].oper.operation);
+            sts<< codeToOperator(eloo[i].oper.operation) <<" ";
         }
         else if(eloo[i].type == CONSTANT)
         {
             if(mode==0) deb<<"constant, code="<<eloo[i].number<<", op= "<<codeToOperator(eloo[i].number)<<"\n";
-            sts<<codeToOperator(eloo[i].number);
+            sts<< codeToOperator(eloo[i].number) <<" ";
         }
         else {if(mode==0) deb<<"unknown\n";}
     }

@@ -3,7 +3,7 @@
 
 #include <vector>
 #include <string>
-#include "compute/structs.h"
+#include "structs.h"
 
 class Calculator
 {
