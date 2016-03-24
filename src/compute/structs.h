@@ -2,6 +2,7 @@
 #define STRUCTS_H_INCLUDED
 
 #include "defines/calcdefines.h"
+#include <vector>
 
 struct OperParam
 {
@@ -9,11 +10,31 @@ struct OperParam
     double val;
 };
 
-struct CalcOperator
+class CalcOperator
 {
+public:
+    CalcOperator(){
+        param = std::vector<OperParam>( MAX_MULTIPARAMS );
+    }
+    ~CalcOperator(){
+        param.clear();
+    }
+
     int operation;
     int paramCount=0;
-    OperParam param[MAX_MULTIPARAMS];
+    std::vector<OperParam> param;
+
+    void clear()
+    {
+        operation=NONE;
+        paramCount=0; //this was a big bug!
+
+        for(int i=0; i<MAX_MULTIPARAMS; i++)
+        {
+            param[i].isConst=false;
+            param[i].val=0;
+        }
+    }
 };
 
 struct CalcElement
@@ -26,13 +47,7 @@ struct CalcElement
     {
         type=NONE;
         number=0;
-        oper.operation=NONE;
-        for(int i=0; i<MAX_MULTIPARAMS; i++)
-        {
-            oper.param[i].isConst=false;
-            oper.param[i].val=0;
-        }
-        oper.paramCount=0; //this was a big bug!
+        oper.clear();
     }
 };
 

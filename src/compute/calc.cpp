@@ -133,7 +133,13 @@ double Calculator::recursiveChunkyCalculation(std::vector<CalcElement> elemso, i
     std::vector<CalcElement> currentChunk;
     std::vector<CalcElement> insideChunk;
 
-    if(dbg) deb<<"Declared vars. Starting loop...\n";
+    if(dbg) deb<<"Declared vars.\n";
+
+    //This was used in older version when identifying was based on parenthesis adding
+    //if(dbg) deb<<"Identifying negatives... (might be temporary)\n";
+    //identifyNegatives(elemso);
+
+    if(dbg) deb<<"Starting loop...\n";
 
     for(i=0; i<elemso.size(); i++)
     {
@@ -254,7 +260,7 @@ double Calculator::recursiveChunkyCalculation(std::vector<CalcElement> elemso, i
         }
     }
 
-    if(dbg) deb<<"\n*****\nLoop end. Final equation:\n";
+    if(dbg) deb<<"\n*****\nLoop end! Final equation:\n";
     Transformer::showElements(elemso, 1);
     if(dbg) deb<<"Returning value from makeCalculationFromChunk()...\n------------------- \n";
 
@@ -265,7 +271,7 @@ double Calculator::makeCalculationFromChunk(std::vector<CalcElement> chunk)
 {
     double calcuResult=(double)chunk.size();
 
-    identifyNegatives(chunk);
+    identifyNegatives(chunk); //identify negs by adding -1 * instead of -
     calculateSpecials(chunk); //Exponents
     calculateDaugs(chunk); //Multiplication, Division
 
@@ -316,7 +322,7 @@ double Calculator::calculateSudDaug(std::vector<CalcElement> elem, int mode) //w
     return rezl;
 }
 
-void Calculator::identifyNegatives(std::vector<CalcElement> &elems)
+void Calculator::identifyNegatives(std::vector<CalcElement> &elems) //TODO - optimize.
 {
     bool dbg = DEBUG_CALCULATOR_IDENTIFYNEGATIVES;
     if(dbg) deb<<"\n- - - - -\nCalc::identifyNegatives():\nGot vector:\n";
@@ -325,7 +331,7 @@ void Calculator::identifyNegatives(std::vector<CalcElement> &elems)
     CalcElement temp;
     bool needToDoStuff=false;
 
-    for(int i=0; i<elems.size(); i++)
+    for(int i=0; i<elems.size()-1; i++)
     {
         if((elems[i].type==OPERATOR && elems[i].oper.operation == MIN))
         {
@@ -335,7 +341,7 @@ void Calculator::identifyNegatives(std::vector<CalcElement> &elems)
 
         if(needToDoStuff)
         {
-            temp.clear();
+            /*temp.clear();
             temp.type=OPERATOR;
             temp.oper.operation=PAR1;
 
@@ -361,7 +367,21 @@ void Calculator::identifyNegatives(std::vector<CalcElement> &elems)
                     elems.insert(elems.begin()+i+j+1, temp);
                     break;
                 }
-            }
+            }*/
+
+            temp.clear();
+            temp.type = NUMBER;
+            temp.number = -1;
+
+            elems.erase(elems.begin()+i);
+            elems.insert(elems.begin()+i, temp); //inserted -1 on pos: i
+            i++; //now points to elem after (-) (now -1)
+
+            temp.clear();
+            temp.type = OPERATOR;
+            temp.oper.operation = DAU;
+
+            elems.insert(elems.begin()+i, temp); //inserted * on pos: i+1 (now i)
 
             needToDoStuff=false;
         }

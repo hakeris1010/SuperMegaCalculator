@@ -14,7 +14,7 @@ public:
     static int setCalculationElements(std::string str, std::vector<CalcElement> &elems);
     static int setOperator(std::string str, int pos=0);
     static void showElements(std::vector<CalcElement> eloo, int mode=0);
-    static std::string codeToOperator(int opcode);
+    static std::string codeToOperator(int opcode, double value=0);
     static double getValueFromElement(CalcElement elem, int param=-1);
     static double getValueFromConstant(int concode);
     static int codeCategory(int code);

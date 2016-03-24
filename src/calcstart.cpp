@@ -1,14 +1,9 @@
 #include "calcstart.h"
 #include "compute/calc.h"
-#include <iostream>
-
-#include "compute/transform.h"
-#include "compute/structs.h"
 #include "tools/debug.h"
 #include "defines/globaldefines.h"
-#include <vector>
+#include <iostream>
 #include <windows.h>
-
 
 int startCalculazione()
 {

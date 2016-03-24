@@ -6,7 +6,7 @@
 #include <iostream>
 #include <sstream>
 #define _USE_MATH_DEFINES
-#include <math.h>
+#include <cmath>
 
 
 int Transformer::setCalculationElements(std::string str, std::vector<CalcElement> &elems)
@@ -64,6 +64,12 @@ int Transformer::setCalculationElements(std::string str, std::vector<CalcElement
                 else if(codeCategory(opnum)==OPERATOR)
                 {
                     el.type = OPERATOR;
+                    el.oper.operation = opnum;
+                }
+                else if(codeCategory(opnum)==EQUATIONAL)
+                {
+                    el.type = EQUATIONAL;
+                    el.number = (double)temp[0];
                     el.oper.operation = opnum;
                 }
 
@@ -152,6 +158,12 @@ void Transformer::showElements(std::vector<CalcElement> eloo, int mode)
             if(mode==0) deb<<"constant, code="<<eloo[i].number<<", op= "<<codeToOperator(eloo[i].number)<<"\n";
             sts<< codeToOperator(eloo[i].number) <<" ";
         }
+        else if(eloo[i].type == EQUATIONAL)
+        {
+            if(mode==0) deb<<"Equational, code="<<eloo[i].oper.operation<<", op= "<<codeToOperator(eloo[i].oper.operation, eloo[i].number)<<"\n";
+            sts<< codeToOperator(eloo[i].oper.operation, eloo[i].number) <<" ";
+        }
+
         else {if(mode==0) deb<<"unknown\n";}
     }
     deb<<"\nAs String: "<<sts.str()<<"\n";
@@ -221,42 +233,55 @@ int Transformer::setOperator(std::string str, int pos)
     else if(Fun::findText(str, "e", pos) || Fun::findText(str, "E", pos)) return CON_E;
     else if(Fun::findText(str, "pi", pos) || Fun::findText(str, "PI", pos)) return CON_PI;
 
+    //else if(Fun::findText(str, "", pos) || Fun::findText(str, "", pos)) return ;
+
+    //equational:
+    if(str.size()==1)
+    {
+        if(str[0]>='a' && str[0]<='z') return SIM_VAR;
+    }
+
     else return NONE; //None found
 }
 
-std::string Transformer::codeToOperator(int opcode)
+std::string Transformer::codeToOperator(int opcode, double value)
 {
-    if(opcode == PLU) return "+";
-    else if(opcode == MIN) return "-";
-    else if(opcode == DAU) return "*";
-    else if(opcode == DAL) return "/";
-    else if(opcode == PAR1) return "(";
-    else if(opcode == PAR2) return ")";
-    else if(opcode == LAIP) return "pow";
-    else if(opcode == SEPAR) return "_";
-    else if(opcode == SAK) return "sqrt";
-    else if(opcode == SIN) return "sin";
-    else if(opcode == COS) return "cos";
-    else if(opcode == TAN) return "tan";
-    else if(opcode == CTAN) return "ctan";
-    else if(opcode == ASIN) return "arcsin";
-    else if(opcode == ACOS) return "arccos";
-    else if(opcode == ATAN) return "arctan";
-    else if(opcode == ACTAN) return "arcctan";
-    else if(opcode == LG) return "lg";
-    else if(opcode == LN) return "ln";
-    else if(opcode == LOG) return "log";
-    else if(opcode == POWS) return "^";
-    else if(opcode == CON_PI) return "const: pi";
-    else if(opcode == CON_E) return "const: e";
-    else if(opcode == NONE) return "NONE";
+    switch(opcode)
+    {
+    case PLU: return "+";
+    case MIN: return "-";
+    case DAU: return "*";
+    case DAL: return "/";
+    case PAR1: return "(";
+    case PAR2: return ")";
+    case LAIP: return "pow";
+    case SEPAR: return "_";
+    case SAK: return "sqrt";
+    case SIN: return "sin";
+    case COS: return "cos";
+    case TAN: return "tan";
+    case CTAN: return "ctan";
+    case ASIN: return "arcsin";
+    case ACOS: return "arccos";
+    case ATAN: return "arctan";
+    case ACTAN: return "arcctan";
+    case LG: return "lg";
+    case LN: return "ln";
+    case LOG: return "log";
+    case POWS: return "^";
+    case CON_PI: return "const: pi";
+    case CON_E: return "const: e";
 
-    else if(opcode == NUMBER) return "NUMBER";
-    else if(opcode == OPERATOR) return "OPERATOR";
-    else if(opcode == CONSTANT) return "CONSTANT";
+    case SIM_VAR: return std::string(1, (char)((int)value));
 
+    case NUMBER: return "NUMBER";
+    case OPERATOR: return "OPERATOR";
+    case CONSTANT: return "CONSTANT";
 
-    else return "Undefined";
+    case NONE: return "NONE";
+    }
+
+    return "Undefined";
 }
 
 double Transformer::getValueFromElement(CalcElement elem, int parm)
@@ -292,9 +317,10 @@ double Transformer::getValueFromConstant(int concode)
 
 int Transformer::codeCategory(int code)
 {
-    if(code>=CONSTANT_START && code<CONSTANT_END) return CONSTANT;
+    if(code>=CONSTANT_START          && code<CONSTANT_END)          return CONSTANT;
     if(code>=STANDART_OPERATOR_START && code<STANDART_OPERATOR_END) return OPERATOR;
-    if(code>=TYPE_START && code<TYPE_END) return TYPE;
+    if(code>=TYPE_START              && code<TYPE_END)              return TYPE;
+    if(code>=EQUATIONAL_START        && code <EQUATIONAL_END)       return EQUATIONAL;
 
     return UNKNOWN;
 }

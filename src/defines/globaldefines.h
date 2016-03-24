@@ -4,7 +4,7 @@
 #include "tools/debug.h"
 
 //VERSION
-#define VERSION "v0.5.0" //Cool!
+#define VERSION "v0.5.1 pre" //Cool!
 
 //precision
 #define FINAL_PRECISION 15
@@ -13,13 +13,13 @@
 #define DEBUGGER_DEBUGMODE   DEBUG_TO_SCREEN
 
 #define DEBUG_CALCULATOR_SENDSTRING                 false
-#define DEBUG_CALCULATOR_RECURSIVECHUNKYCALCULATION false
+#define DEBUG_CALCULATOR_RECURSIVECHUNKYCALCULATION true
 #define DEBUG_CALCULATOR_CALCULATEDAUGS             false
 #define DEBUG_CALCULATOR_CALCULATESPECIALS          false
 #define DEBUG_CALCULATOR_SKAICSPECIAL               false
-#define DEBUG_CALCULATOR_IDENTIFYNEGATIVES          false
+#define DEBUG_CALCULATOR_IDENTIFYNEGATIVES          true
 
-#define DEBUG_TRANSFORMER_SHOWELEMENTS              false
+#define DEBUG_TRANSFORMER_SHOWELEMENTS              true
 #define DEBUG_TRANSFORMER_SETCALCULATIONELEMENTS    false
 #define DEBUG_TRANSFORMER_SHOWCALCELEMENTCONTENTS   false
 //debug define end

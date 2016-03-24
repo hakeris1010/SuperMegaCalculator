@@ -1,6 +1,15 @@
 /*
-SuperMegaCalculator by h3nt4iBoY a.k.a. Hakeris1010
+SuperMegaCalculator by H3nt4iBoY a.k.a. Hakeris1010
 
+v0.5.1 InDev
+-*- Current Done -*-
+- Removed a bug with Calculator::identifyNegatives() and not calculated parenthesis.
+
+-*- InDev -*-
+- Variable implementation(x, y, etc), to form equations.
+- Operations with equations (solve, differentiate, integrate, etc)
+
+-*- Previous -*-
 v0.5.0
 - (1) Added Makefile, with a Static Library as an option:
     - Targets: normal_exec, static_lib, exec_wlib
@@ -22,7 +31,7 @@ TODOS:
 #include "defines/globaldefines.h"
 #include "defines/formal.h"
 
-//#define VERSION "v0.5.0" //more accurate in "globaldefines.h"
+//#define VERSION "v0.5.1" //more accurate in "globaldefines.h"
 
 using namespace std;
 
