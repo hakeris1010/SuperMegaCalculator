@@ -12,10 +12,12 @@ private:
     double result=-13.37;
     int calcErrCode=0;
     double lastNum;
+    bool equational=false;
 
     bool advancedMath=false;
     bool isCalculated=true;
 
+    //functions
     int startCalculation();
 
     void correctString(std::string & str);

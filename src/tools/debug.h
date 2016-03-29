@@ -1,4 +1,5 @@
-/* Debugger by H3nt4iBoY v1.2
+/* Debugger by H3nt4iBoY v1.3
+
 - Everything in one .h
 - Supports 3 modes: file, screen, no debug.
 - Can be switched in runtime
@@ -12,10 +13,10 @@
 #include <iostream>
 #include <string>
 
-#define DEBUG_CLASS_VERSION "1.2"
-#define DEBUG_TO_FILE 1
+#define DEBUG_CLASS_VERSION "1.3"
+#define DEBUG_TO_FILE   1
 #define DEBUG_TO_SCREEN 2
-#define DEBUG_NO_DEBUG 3
+#define DEBUG_NO_DEBUG  3
 
 class Debug
 {
@@ -24,7 +25,9 @@ private:
     int mode = DEBUG_TO_FILE;
     bool file_close=true;
     std::ofstream outp;
+
     std::string lastModificationTag;
+    bool writeDebugs=true;
 
 public:
     Debug(){ }
@@ -36,32 +39,39 @@ public:
     }
     ~Debug(){ outp.close(); }
 
-    void setMode(int _modde){ mode=_modde; }
-    void closeFile(bool val){ file_close=val; }
-    void setDoublePrecision(int val){ std::cout.precision(val); outp.precision(val); }
-
+    void setMode(int _modde)      { mode=_modde; }
+    void setWriteDebugs(bool _val){ writeDebugs=_val; }
+    void closeFile(bool val)      { file_close=val; }
     void setLastModifTag(std::string tag){ lastModificationTag=tag; }
-    std::string getLastModif(){ return lastModificationTag; }
+    void setDoublePrecision(int val)
+    {
+        std::cout.precision(val);
+        outp.precision(val);
+    }
 
-    template<typename T> Debug& operator<<(const T val);
+    std::string getLastModif(){ return lastModificationTag; }
+    bool getWriteDebugs()     { return writeDebugs; }
+
+    template<typename T>
+    Debug& operator<<(const T val);
 };
 
 template<typename T>
 Debug& Debug::operator<<(const T val)
 {
-    if(mode==DEBUG_TO_FILE)
+    if(mode==DEBUG_TO_FILE && writeDebugs)
     {
         if(file_close || !outp.is_open()) outp.open(debfile.c_str(), std::ofstream::app);
         outp<<val;
         if(file_close) outp.close();
     }
-    else if(mode==DEBUG_TO_SCREEN) std::cout<<val;
+    else if(mode==DEBUG_TO_SCREEN && writeDebugs) std::cout<<val;
 
     return *this;
 }
 
 
-extern Debug deb;
+extern Debug deb; //default debugger
 
 
 #endif // DEBUG_H_INCLUDED

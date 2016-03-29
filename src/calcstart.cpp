@@ -41,11 +41,11 @@ int startCalculazione()
 
         deb<<"\nRemind of salyga: "<<sal<<"\n\n";
         deb<<"------------------------------\n\n";
-        deb<<"Result (asDouble): "<<rezult<<" ,Result (asString): "<<resultstr<<",  time of calculation: "<<GetTickCount()-timenow<<" ms.\n";
+        deb<<" Result (asDouble): "<<rezult<<"\n Result (asString): "<<resultstr<<"\n time of calculation: "<<GetTickCount()-timenow<<" ms.\n";
 
         std::cout.precision(FINAL_PRECISION);
 
-        std::cout<<"\nResult: "<<resultstr<<" ,  calc. time: "<<GetTickCount()-timenow<<" ms.\n\n";
+        std::cout<<"\nResult: "<<resultstr<<"\ncalc. time: "<<GetTickCount()-timenow<<" ms.\n\n";
     }
 
     return 0;

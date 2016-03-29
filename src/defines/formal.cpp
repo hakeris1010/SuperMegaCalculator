@@ -3,7 +3,7 @@
 #include "tools/debug.h"
 #include "tools/fun.h"
 
-Debug deb; //debug declared here.
+Debug deb; //debug declared here..
 
 void startDebugger_printDebugInfo(const char *data, int mode) //0 -only start debugger, 1 -start and print.
 {

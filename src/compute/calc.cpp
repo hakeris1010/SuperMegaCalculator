@@ -52,15 +52,21 @@ void Calculator::sendString(std::string str)
     isCalculated=false;
     if(dbg) deb<<"\nNew operation assigned: "<<str<<"\n";
 
-    correctString(str);
-    if(dbg) deb<<"\nAfter correction: "<<str<<"\n";
+    //correctString(str);
+    //if(dbg) deb<<"\nAfter correction: "<<str<<"\n";
 
     salyga=str;
     int ero = startCalculation();
 
-    if(ero!=0) calcErrCode=ero;
-    if(std::isnan(result)) calcErrCode=6;
-    if(std::isinf(result)) calcErrCode=7;
+    if(ero!=0) calcErrCode= ero;
+    if(std::isnan(result)) calcErrCode= Result_is_NaN;
+    if(std::isinf(result)) calcErrCode= Result_is_INF;
+
+    if(calcErrCode)
+    {
+        deb<<"Something's wrong with the equation... Correct it, madafaka!";
+        deb<<"(error: "<<Transformer::getErrorString((CalcErrorCode)calcErrCode)<<")\n";
+    }
 
     isCalculated=true;
 }
@@ -80,42 +86,31 @@ std::string Calculator::getResultAsString()
     if(isCalculated)
     {
         if(calcErrCode==0) return Fun::toString(result);
-        else return "Error (not nyanyanya). errCode: "+Fun::toString(calcErrCode);
+        else return "Error (not nyanyanya). errCode: "+Transformer::getErrorString((CalcErrorCode)calcErrCode);
     }
     return "Still Calculating!";
 }
 
 int Calculator::startCalculation()
 {
+    bool dbg=DEBUG_CALCULATOR_STARTCALCULATION;
     std::vector<CalcElement> elemen;
 
     int erval = Transformer::setCalculationElements(salyga, elemen);
 
     if(erval!=0)
-    {
-        deb<<"Something's wrong with the equation... Correct it, madafaka! (errcode: "<<erval<<")\n";
         return erval;
-    }
 
     result = recursiveChunkyCalculation(elemen, 1);
+
+    //if(dbg) deb<<"\nstartCalcultation:\nElems after Everything:\n";
+    //Transformer::showElements(elemen, 1);
+
+    /*if(!equational && elemen.size()!=1)
+        return CalcErrorCode::Incomplete_Calculation;*/
+
     lastNum = result;
-
     return 0;
-}
-
-void Calculator::correctString(std::string & str)
-{
-    //something in the future.
-}
-
-bool Calculator::operatorNext(std::string str, int pos)
-{
-    if(pos >= str.size()) return false;
-
-    if(str[pos]>='0' && str[pos]<='9') return false;
-    if(str[pos]=='(' || str[pos]==')') return false;
-
-    return true;
 }
 
 double Calculator::recursiveChunkyCalculation(std::vector<CalcElement> elemso, int level) //works great!
@@ -147,13 +142,13 @@ double Calculator::recursiveChunkyCalculation(std::vector<CalcElement> elemso, i
         if(dbg) deb<<"States: areChunksInside: "<<areChunksInside<<", nowWritingIntoChunk: "<<nowWritingIntoChunk<<", areNumsInInnerChunk: "<<areNumsInInnerChunk<<"\n";
         if(dbg) deb<<"par1skInChun="<<par1skInChun<<", par2skInChun="<<par2skInChun<<", innerChunkStartPos="<<innerChunkStartPos<<", innerChunkLenght="<<innerChunkLenght<<"\n~~~\n";
 
-        if(elemso[i].type==OPERATOR)
+        if(elemso[i].type==CALC_OPERATOR)
         {
             if(dbg) deb<<"Found: operator, val= "<<Transformer::codeToOperator(elemso[i].oper.operation)<<" \n";
 
-            if(!nowWritingIntoChunk) //on main chunk
+            if(!nowWritingIntoChunk) //on main chunk (NOT writing into inner chunk)
             {
-                if(elemso[i].oper.operation == PAR1)
+                if(elemso[i].oper.operation == CALC_PAR1)
                 {
                     if(dbg) deb<<"Par1 found! Starting inner chunk writing. \n";
 
@@ -164,6 +159,12 @@ double Calculator::recursiveChunkyCalculation(std::vector<CalcElement> elemso, i
 
                     if(dbg) deb<<"innerChunkStartPos="<<innerChunkStartPos<<" \n";
                 }
+                else if(elemso[i].oper.operation == CALC_PAR2)
+                {
+                    if(dbg) deb<<"Error with parenthesis! (!writingIntoChunk && ')' found)\n";
+                    calcErrCode = CalcErrorCode::Bad_Pars;
+                    break;
+                }
 
                 //assign op to a current vec.
                 if(!nowWritingIntoChunk)
@@ -171,15 +172,15 @@ double Calculator::recursiveChunkyCalculation(std::vector<CalcElement> elemso, i
                     if(dbg) deb<<"Assigning op to currentChunk... \n";
                     currentChunk.push_back(elemso[i]);
 
-                    if(afterMultiparam &&  elemso[i].oper.operation != SEPAR) afterMultiparam=false;
+                    if(afterMultiparam &&  elemso[i].oper.operation != CALC_SEPAR) afterMultiparam=false;
 
-                    if(elemso[i].oper.operation >= MULTIPARAM_START && elemso[i+1].oper.operation != SEPAR) afterMultiparam=true;
+                    if(elemso[i].oper.operation >= CALC_MULTIPARAM_START && elemso[i+1].oper.operation != CALC_SEPAR) afterMultiparam=true;
                 }
             }
             else //writing into insider chunk.
             {
-                if(elemso[i].oper.operation == PAR1) par1skInChun++;
-                if(elemso[i].oper.operation == PAR2) par2skInChun++;
+                if(elemso[i].oper.operation == CALC_PAR1) par1skInChun++;
+                if(elemso[i].oper.operation == CALC_PAR2) par2skInChun++;
 
                 if(par2skInChun<=par1skInChun)
                 {
@@ -190,7 +191,7 @@ double Calculator::recursiveChunkyCalculation(std::vector<CalcElement> elemso, i
             }
         }
 
-        else if(elemso[i].type==NUMBER)
+        else if(elemso[i].type==CALC_NUMBER)
         {
             if(dbg) deb<<"Found: number, val="<<elemso[i].number<<" \n";
 
@@ -216,10 +217,17 @@ double Calculator::recursiveChunkyCalculation(std::vector<CalcElement> elemso, i
 
             double innerChunkResult = recursiveChunkyCalculation(insideChunk, level+1);
 
+            if(calcErrCode)
+            {
+                if(dbg) deb<<"Error occured!\n Breaking operation...\n";
+                //deb.setWriteDebugs(true);
+                return calcErrCode;
+            }
+
             if(dbg) deb<<"\nrecursiveChunkyCalc() returned value: "<<innerChunkResult<<"\nCreating a new element... \n";
 
             CalcElement cel;
-            cel.type=NUMBER;
+            cel.type=CALC_NUMBER;
             cel.number=innerChunkResult;
 
             if(dbg) deb<<"Erasing innerChunk elements in main chunk... \n";
@@ -230,8 +238,8 @@ double Calculator::recursiveChunkyCalculation(std::vector<CalcElement> elemso, i
             if(afterMultiparam)
             {
                 CalcElement sep;
-                sep.type=OPERATOR;
-                sep.oper.operation=SEPAR;
+                sep.type=CALC_OPERATOR;
+                sep.oper.operation=CALC_SEPAR;
 
                 elemso.insert(elemso.begin()+innerChunkStartPos, sep);
                 elemso.insert(elemso.begin()+innerChunkStartPos+1, cel);
@@ -260,18 +268,26 @@ double Calculator::recursiveChunkyCalculation(std::vector<CalcElement> elemso, i
         }
     }
 
+    if(calcErrCode)
+    {
+        if(dbg) deb<<"RecursiveChunkyCalc: Error happened!\n";
+        //deb.setWriteDebugs(true);
+        return calcErrCode;
+    }
+
     if(dbg) deb<<"\n*****\nLoop end! Final equation:\n";
     Transformer::showElements(elemso, 1);
     if(dbg) deb<<"Returning value from makeCalculationFromChunk()...\n------------------- \n";
+    //deb.setWriteDebugs(true);
 
-    return makeCalculationFromChunk(elemso);
+    return makeCalculationFromChunk(elemso); //get our result;
 }
 
 double Calculator::makeCalculationFromChunk(std::vector<CalcElement> chunk)
 {
     double calcuResult=(double)chunk.size();
 
-    identifyNegatives(chunk); //identify negs by adding -1 * instead of -
+    identifyNegatives(chunk); //identify negs by adding -1* instead of -
     calculateSpecials(chunk); //Exponents
     calculateDaugs(chunk); //Multiplication, Division
 
@@ -284,11 +300,11 @@ double Calculator::calculateSudDaug(std::vector<CalcElement> elem, int mode) //w
 {
     double rezl=0;
     int startPos=-1;
-    int lastOp=NONE;
+    int lastOp=CALC_NONE;
 
     for(int i=0; i<elem.size(); i++)
     {
-        if(elem[i].type==NUMBER)
+        if(elem[i].type==CALC_NUMBER)
         {
             startPos=i;
             break;
@@ -297,23 +313,23 @@ double Calculator::calculateSudDaug(std::vector<CalcElement> elem, int mode) //w
 
     if(startPos>=0)
     {
-        if(elem[startPos].type==NUMBER) rezl=elem[startPos].number;
+        if(elem[startPos].type==CALC_NUMBER) rezl=elem[startPos].number;
 
         for(int i=startPos+1; i<elem.size(); i++)
         {
-            if(elem[i].type==OPERATOR) lastOp=elem[i].oper.operation;
+            if(elem[i].type==CALC_OPERATOR) lastOp=elem[i].oper.operation;
 
-            if(elem[i].type==NUMBER)
+            if(elem[i].type==CALC_NUMBER)
             {
                 if(mode==1)
                 {
-                    if(lastOp==PLU) rezl+=elem[i].number;
-                    if(lastOp==MIN) rezl-=elem[i].number;
+                    if(lastOp==CALC_PLU) rezl+=elem[i].number;
+                    if(lastOp==CALC_MIN) rezl-=elem[i].number;
                 }
                 if(mode==2)
                 {
-                    if(lastOp==DAU) rezl*=elem[i].number;
-                    if(lastOp==DAL) rezl/=elem[i].number;
+                    if(lastOp==CALC_DAU) rezl*=elem[i].number;
+                    if(lastOp==CALC_DAL) rezl/=elem[i].number;
                 }
             }
         }
@@ -333,44 +349,16 @@ void Calculator::identifyNegatives(std::vector<CalcElement> &elems) //TODO - opt
 
     for(int i=0; i<elems.size()-1; i++)
     {
-        if((elems[i].type==OPERATOR && elems[i].oper.operation == MIN))
+        if((elems[i].type==CALC_OPERATOR && elems[i].oper.operation == CALC_MIN))
         {
             if(i==0) needToDoStuff=true;
-            else if(elems[i-1].type != NUMBER && elems[i-1].oper.operation != PAR2) needToDoStuff=true;
+            else if(elems[i-1].type != CALC_NUMBER && elems[i-1].oper.operation != CALC_PAR2) needToDoStuff=true;
         }
 
         if(needToDoStuff)
         {
-            /*temp.clear();
-            temp.type=OPERATOR;
-            temp.oper.operation=PAR1;
-
-            elems.insert(elems.begin()+i, temp);
-            i++;
-
             temp.clear();
-            temp.type=NUMBER;
-            temp.number=0;
-
-            elems.insert(elems.begin()+i, temp);
-            i++;
-
-            temp.clear();
-            temp.type=OPERATOR;
-            temp.oper.operation=PAR2;
-
-            int j=0;
-            for(j=0; j<elems.size()-i; j++)
-            {
-                if(elems[i+j].type==NUMBER)
-                {
-                    elems.insert(elems.begin()+i+j+1, temp);
-                    break;
-                }
-            }*/
-
-            temp.clear();
-            temp.type = NUMBER;
+            temp.type = CALC_NUMBER;
             temp.number = -1;
 
             elems.erase(elems.begin()+i);
@@ -378,8 +366,8 @@ void Calculator::identifyNegatives(std::vector<CalcElement> &elems) //TODO - opt
             i++; //now points to elem after (-) (now -1)
 
             temp.clear();
-            temp.type = OPERATOR;
-            temp.oper.operation = DAU;
+            temp.type = CALC_OPERATOR;
+            temp.oper.operation = CALC_DAU;
 
             elems.insert(elems.begin()+i, temp); //inserted * on pos: i+1 (now i)
 
@@ -409,7 +397,7 @@ void Calculator::calculateDaugs(std::vector<CalcElement> &elems) //Bug!
         if(dbg) deb<<"\n* * *\nLoop of i= "<<i<<":\nState: ";
         if(dbg) deb<<"onDaug: "<<onDaug<<", onDaugFirstTime: "<<onDaugFirstTime<<", daugStartPos= "<<daugStartPos<<", daugLenght= "<<daugLenght<<"\n~~~\n";
 
-        if(!onDaug && elems[i].type == OPERATOR && (elems[i].oper.operation==DAU || elems[i].oper.operation==DAL))
+        if(!onDaug && elems[i].type == CALC_OPERATOR && (elems[i].oper.operation==CALC_DAU || elems[i].oper.operation==CALC_DAL))
         {
             if(dbg) deb<<"!onDaug: Found DAU/DAL operator! Setting onDaug and others->true.\n";
 
@@ -433,7 +421,7 @@ void Calculator::calculateDaugs(std::vector<CalcElement> &elems) //Bug!
             daugLenght++;
         }
 
-        if( onDaug && ((elems[i].type == OPERATOR && (elems[i].oper.operation!=DAU && elems[i].oper.operation!=DAL)) || i>=(elems.size()-1)) )
+        if( onDaug && ((elems[i].type == CALC_OPERATOR && (elems[i].oper.operation!=CALC_DAU && elems[i].oper.operation!=CALC_DAL)) || i>=(elems.size()-1)) )
         {
             if(i>=(elems.size()-1)) {if(dbg) deb<<"onDaug: End of equation! calculating daug result: ";}
             else {if(dbg) deb<<"onDaug: found not DAU op! calculating daug result: ";}
@@ -445,7 +433,7 @@ void Calculator::calculateDaugs(std::vector<CalcElement> &elems) //Bug!
             if(dbg) deb<<daures<<"\nAssigning to vector, erasing dauged members...\n";
 
             CalcElement ce;
-            ce.type=NUMBER;
+            ce.type=CALC_NUMBER;
             ce.number=daures;
 
             if(!mustEnd) elems.erase(elems.begin()+daugStartPos, elems.begin()+i);
@@ -489,19 +477,19 @@ void Calculator::calculateSpecials(std::vector<CalcElement> &elems)
         if(dbg) deb<<"onMultiSpecial: "<<onMultiSpecial<<", onOtherSpecial: "<<onOtherSpecial<<", onSpecial: "<<onSpecial<<", specialReady: "<<specialReady<<"\n";
         if(dbg) deb<<"specialStartPos= "<<specialStartPos<<", multiParamCount= "<<multiParamCount<<", specialLenght= "<<specialLenght<<"\n~ ~ ~\n";
 
-        if(elems[i].type==OPERATOR){ if(dbg) deb<<"Found: Operator, val= "<<Transformer::codeToOperator(elems[i].oper.operation)<<"\n"; }
-        else if(elems[i].type==NUMBER){ if(dbg) deb<<"Found: Number, val= "<<elems[i].number<<"\n"; }
-        else if(elems[i].type==CONSTANT){ if(dbg) deb<<"Found: Constant, val= "<<Transformer::codeToOperator(elems[i].number)<<"\n"; }
+        if(elems[i].type==CALC_OPERATOR){ if(dbg) deb<<"Found: Operator, val= "<<Transformer::codeToOperator(elems[i].oper.operation)<<"\n"; }
+        else if(elems[i].type==CALC_NUMBER){ if(dbg) deb<<"Found: Number, val= "<<elems[i].number<<"\n"; }
+        else if(elems[i].type==CALC_CONSTANT){ if(dbg) deb<<"Found: Constant, val= "<<Transformer::codeToOperator(elems[i].number)<<"\n"; }
 
-        if(elems[i].type==OPERATOR && elems[i].oper.operation>=ADVANCED_START && elems[i].oper.operation<NON_CALCULATIVE_START && !onSpecial)
+        if(elems[i].type==CALC_OPERATOR && elems[i].oper.operation>=CALC_ADVANCED_START && elems[i].oper.operation<CALC_NON_CALCULATIVE_START && !onSpecial)
         {
             if(dbg) deb<<"Fount advanced calc. operator: "<<Transformer::codeToOperator(elems[i].oper.operation)<<"\n";
-            if(elems[i].oper.operation>=MULTIPARAM_START && elems[i].oper.operation<MULTIPARAM_END)
+            if(elems[i].oper.operation>=CALC_MULTIPARAM_START && elems[i].oper.operation<CALC_MULTIPARAM_END)
             {
                 if(dbg) deb<<"Operator multiSpecial: true\n";
                 onMultiSpecial=true;
             }
-            if(elems[i].oper.operation>=OTHERSPECIAL_START && elems[i].oper.operation<OTHERSPECIAL_END)
+            if(elems[i].oper.operation>=CALC_OTHERSPECIAL_START && elems[i].oper.operation<CALC_OTHERSPECIAL_END)
             {
                 if(dbg) deb<<"Operator OtherSpecial: true\n";
                 onOtherSpecial=true;
@@ -522,34 +510,34 @@ void Calculator::calculateSpecials(std::vector<CalcElement> &elems)
             if(dbg) deb<<"onSpecial: \n";
             bool endOfSpecial=false;
 
-            if(onMultiSpecial && (elems[i].type==NUMBER || elems[i].type==CONSTANT))
+            if(onMultiSpecial && (elems[i].type==CALC_NUMBER || elems[i].type==CALC_CONSTANT))
             {
                 if(dbg) deb<<"onMultiSpecial, number found: "<<elems[i].number<<"\n";
                 if(i<elems.size()-1)
                 {
-                    if(elems[i+1].type==OPERATOR && elems[i+1].oper.operation==SEPAR && multiParamCount<MAX_MULTIPARAMS)
+                    if(elems[i+1].type==CALC_OPERATOR && elems[i+1].oper.operation==CALC_SEPAR && multiParamCount<CALC_MAX_MULTIPARAMS)
                     {
                         if(dbg) deb<<"Assigning multiparam.\n";
                         specel.oper.param[multiParamCount].val = elems[i].number;
-                        if(elems[i].type==CONSTANT) specel.oper.param[multiParamCount].isConst=true;
+                        if(elems[i].type==CALC_CONSTANT) specel.oper.param[multiParamCount].isConst=true;
                         multiParamCount++;
                         specel.oper.paramCount++;
                     }
-                    else if(elems[i+1].type==OPERATOR && elems[i+1].oper.operation!=SEPAR) endOfSpecial=true;
+                    else if(elems[i+1].type==CALC_OPERATOR && elems[i+1].oper.operation!=CALC_SEPAR) endOfSpecial=true;
 
                 }
                 else endOfSpecial=true;
             }
-            else if(!onMultiSpecial && (elems[i].type==NUMBER || elems[i].type==CONSTANT)) endOfSpecial=true;
+            else if(!onMultiSpecial && (elems[i].type==CALC_NUMBER || elems[i].type==CALC_CONSTANT)) endOfSpecial=true;
 
             if(onOtherSpecial)
             {
                 if(dbg) deb<<"onOtherSpecial: \n";
-                if(elems[i].type==OPERATOR && elems[i].oper.operation==POWS && specel.oper.paramCount==0 && multiParamCount==0)
+                if(elems[i].type==CALC_OPERATOR && elems[i].oper.operation==CALC_POWS && specel.oper.paramCount==0 && multiParamCount==0)
                 {
                     if(dbg) deb<<"\nPOW CheckBlock:\n";
                     if(i>0){
-                        if(elems[i-1].type==NUMBER)
+                        if(elems[i-1].type==CALC_NUMBER)
                         {
                             specel.oper.param[multiParamCount].val = elems[i-1].number;
                             if(dbg) deb<<"Assigning specel["<<multiParamCount<<"].value from The Number Before! ( "<<elems[i-1].number<<" )\n";
@@ -561,7 +549,7 @@ void Calculator::calculateSpecials(std::vector<CalcElement> &elems)
 
                     if(i+1 < elems.size())
                     {
-                        if(elems[i+1].type==NUMBER)
+                        if(elems[i+1].type==CALC_NUMBER)
                         {
                             specel.oper.param[multiParamCount].val = elems[i+1].number;
                             if(dbg) deb<<"Assigning NextNum (param.2)! val = "<< elems[i+1].number <<"\n";
@@ -605,8 +593,14 @@ void Calculator::calculateSpecials(std::vector<CalcElement> &elems)
             double speRes = skaicSpecial(specel);
             if(dbg) deb<<speRes<<"\n";
 
+            if(calcErrCode)
+            {
+                if(dbg) deb<<"Err happened on skaicSpecial!\n";
+                break;
+            }
+
             CalcElement tmp;
-            tmp.type=NUMBER;
+            tmp.type=CALC_NUMBER;
             tmp.number=speRes;
 
             if(dbg) deb<<"Erasing used elems in vector, inserting new value...\n";
@@ -631,37 +625,50 @@ void Calculator::calculateSpecials(std::vector<CalcElement> &elems)
 
 double Calculator::skaicSpecial(CalcElement numop)
 {
-    bool dbg=DEBUG_CALCULATOR_SKAICSPECIAL;
-    if(dbg){ deb<<"\n+-+-+-+\nCalc::skaicSpecial():\nGot CalcElement:\n"; Transformer::showCalcElementContents(numop); }
+    deb.setWriteDebugs( DEBUG_CALCULATOR_SKAICSPECIAL );
+
+    deb<<"\n+-+-+-+\nCalc::skaicSpecial():\nGot CalcElement:\n";
+    Transformer::showCalcElementContents(numop);
+    deb<<"\n";
+
+    if( !Transformer::isMultiparamElementGood(numop) )
+    {
+        deb<<"Error on Multiparams!\n";
+        calcErrCode = CalcErrorCode::Bad_Multiparams;
+        return calcErrCode;
+    }
 
     double ress=0;
 
     switch(numop.oper.operation)
     {
-    case SIN: ress= sin( Transformer::getValueFromElement(numop) ); break;
-    case COS: ress= cos( Transformer::getValueFromElement(numop) ); break;
-    case TAN: ress= tan( Transformer::getValueFromElement(numop) ); break;
-    case CTAN: ress= 1 / tan( Transformer::getValueFromElement(numop) ); break;
-    case ASIN: ress= asin( Transformer::getValueFromElement(numop) ); break;
-    case ACOS: ress= acos( Transformer::getValueFromElement(numop) ); break;
-    case ATAN: ress= atan( Transformer::getValueFromElement(numop) ); break;
-    case ACTAN: ress= atan( 1 / Transformer::getValueFromElement(numop) ); break;
-    case LG: ress= log10( Transformer::getValueFromElement(numop) ); break;
-    case LN: ress= log( Transformer::getValueFromElement(numop) ); break;
-    //multiparams:
-    case LOG: ress= log( Transformer::getValueFromElement(numop)) / log(Transformer::getValueFromElement(numop,0) ); break;
-    case LAIP: ress= pow( Transformer::getValueFromElement(numop), Transformer::getValueFromElement(numop,0) ); break;
-    case SAK:
-        {
-            if(numop.oper.paramCount==0){ ress= pow( Transformer::getValueFromElement(numop), 0.5 );}
-            else{ ress= pow( Transformer::getValueFromElement(numop), 1 / Transformer::getValueFromElement(numop,0) );}
-            break;
-        }
-    //case POWS: ress= pow( Transformer::getValueFromElement(numop,0), Transformer::getValueFromElement(numop,1) ); break;
-    case POWS: ress= pow( numop.oper.param[0].val, numop.oper.param[1].val ); break;
-    }
+    //standart
+    case CALC_SIN:   ress= sin( Transformer::getValueFromElement(numop) ); break;
+    case CALC_COS:   ress= cos( Transformer::getValueFromElement(numop) ); break;
+    case CALC_TAN:   ress= tan( Transformer::getValueFromElement(numop) ); break;
+    case CALC_CTAN:  ress= 1 / tan( Transformer::getValueFromElement(numop) ); break;
+    case CALC_ASIN:  ress= asin( Transformer::getValueFromElement(numop) ); break;
+    case CALC_ACOS:  ress= acos( Transformer::getValueFromElement(numop) ); break;
+    case CALC_ATAN:  ress= atan( Transformer::getValueFromElement(numop) ); break;
+    case CALC_ACTAN: ress= atan( 1 / Transformer::getValueFromElement(numop) ); break;
+    case CALC_LG:    ress= log10( Transformer::getValueFromElement(numop) ); break;
+    case CALC_LN:    ress= log( Transformer::getValueFromElement(numop) ); break;
 
-    if(dbg) deb<<"Res= "<<ress<<"\n+-+-+-+\n";
+    //multiparams:
+    case CALC_LOG: ress= log( Transformer::getValueFromElement(numop)) / log(Transformer::getValueFromElement(numop,0) ); break;
+    case CALC_POWFUN: ress= pow( Transformer::getValueFromElement(numop), Transformer::getValueFromElement(numop,0) ); break;
+    case CALC_SAK:
+        if(numop.oper.paramCount==0){ ress= pow( Transformer::getValueFromElement(numop), 0.5 );}
+        else{ ress= pow( Transformer::getValueFromElement(numop), 1 / Transformer::getValueFromElement(numop,0) );}
+        break;
+
+    //case POWS: ress= pow( Transformer::getValueFromElement(numop,0), Transformer::getValueFromElement(numop,1) ); break;
+    case CALC_POWS: ress= pow( numop.oper.param[0].val, numop.oper.param[1].val ); break;
+
+    }
+    deb<<"Res= "<<ress<<"\n+-+-+-+\n";
+
+    deb.setWriteDebugs(true);
 
     return ress;
 }
