@@ -7,9 +7,9 @@ LDFLAGS=
 INCLUDE=-I$(mkfile_path)/src -I$(mkfile_path)/src/**/ -I$(mkfile_path)/include
 LINKER=-L$(mkfile_path)/lib
 
-SOURCES=src/main.cpp src/calcstart.cpp src/compute/calc.cpp src/compute/datachunk.cpp src/compute/transform.cpp src/tools/fun.cpp src/defines/formal.cpp
+SOURCES=src/main.cpp src/calcstart.cpp src/compute/calc.cpp src/compute/transform.cpp src/compute/equational.cpp src/defines/formal.cpp src/tools/fun.cpp
 
-SOURCES_LIB=src/compute/calc.cpp src/compute/datachunk.cpp src/compute/transform.cpp src/tools/fun.cpp src/defines/formal.cpp
+SOURCES_LIB=src/compute/calc.cpp src/compute/transform.cpp src/compute/equational.cpp src/defines/formal.cpp src/tools/fun.cpp
 
 SOURCES_FINAL_WLIB=test/maintest.cpp
 
@@ -21,6 +21,8 @@ EXECUTABLE=SuperMegaCalculator
 
 .cpp.o:
 	$(CC) $(INCLUDE) $(CFLAGS) $< -o $@
+
+all: normal_exe static_lib exec_wlib 
     
 normal_exe: $(SOURCES) $(OBJECTS) 
 	$(CC) $(LDFLAGS) $(OBJECTS) -o $(EXECUTABLE)
@@ -36,8 +38,6 @@ clean_o:
 
 clean_all: clean_o
 	rm -f $(EXECUTABLE) $(EXECUTABLE)_LibTest $(EXECUTABLE).exe $(EXECUTABLE)_LibTest.exe lib/lib$(EXECUTABLE).a
-
-all: normal_exe static_lib exec_wlib 
 
 fresh: clean_all all
 

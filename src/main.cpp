@@ -14,6 +14,7 @@ v0.5.2
 - Removed a bug with Calculator::identifyNegatives() and not calculated parenthesis.
 
 BUGS:
+- SQRT have wrongly interpreted multiparams
 
 TODOS:
 v0.5.3
